@@ -1,0 +1,25 @@
+{
+  "name": "programmer-magazine-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "prog.ts",
+  "dependencies": {
+    "jsdom": "^15.1.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^12.2.4",
+    "@types/node": "^12.7.11",
+    "@types/request": "^2.48.3",
+    "@types/request-promise-native": "^1.0.17",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3"
+  },
+  "scripts": {
+    "start": "ts-node prog.ts"
+  },
+  "keywords": [],
+  "author": "Krzysztof Rosinski",
+  "license": "ISC"
+}
