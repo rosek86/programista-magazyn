@@ -102,9 +102,10 @@ class ProgrammerMagazineScraper {
     return table.getElementsByTagName('a');
   }
 
-  public async scrape(skipExisting = true): Promise<void> {
+  public async scrape(directory = '', skipExisting = true): Promise<void> {
     for (const link of await this.getLinks()) {
-      const magazinefolder = path.join(__dirname, 'magazines', link.id);
+      const baseFolder = directory === '' ? __dirname : directory;
+      const magazinefolder = path.join(baseFolder, 'programista', link.id);
       const filename = path.join(magazinefolder, link.filename);
 
       if (skipExisting) {
@@ -168,15 +169,21 @@ class ProgrammerMagazineScraper {
 (async () => {
   const username = process.env.USERNAME;
   const password = process.env.PASSWORD;
-
+  
   if (!username || !password) {
     console.log('Please set enviromental variables');
     return;
   }
+
+  let directory = '';
+  if (process.argv.length === 3) {
+    directory = process.argv[2];
+  }
+
   try {
     const scraper = new ProgrammerMagazineScraper(username, password);
     scraper.maxRequests = 5;
-    scraper.scrape();
+    scraper.scrape(directory);
   } catch (err) {
     console.log(err);
   }
