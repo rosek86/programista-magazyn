@@ -71,6 +71,8 @@ class ProgrammerMagazineScraper {
   }
 
   private async getMyMagazinesDom(): Promise<JSDOM> {
+    console.log('Downloading magazines list...');
+
     const formData = querystring.stringify({
       log: this.username, pwd: this.password,
     });
@@ -85,6 +87,7 @@ class ProgrammerMagazineScraper {
       jar: this.cookieJar,
       resolveWithFullResponse: true,
       followAllRedirects: true,
+      timeout: 20 * 1000,
     });
 
     return new JSDOM(loginResult.body);
