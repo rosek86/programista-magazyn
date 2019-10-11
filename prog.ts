@@ -187,7 +187,7 @@ class ProgrammerMagazineScraper {
         });
         await fs.mkdir(folder, { recursive: true });
         await fs.writeFile(filename, content);
-        this.newMagazines.push(folder);
+        this.newMagazines.push(filename);
         console.log(filebase, 'ok');
       } catch (err) {
         console.log(filebase, err.message);
