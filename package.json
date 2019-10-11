@@ -4,6 +4,8 @@
   "description": "",
   "main": "prog.ts",
   "dependencies": {
+    "@slack/events-api": "^2.3.0",
+    "@slack/web-api": "^5.2.1",
     "jsdom": "^15.1.1",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7"

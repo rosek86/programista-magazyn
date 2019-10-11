@@ -1,11 +1,13 @@
 import * as url from 'url';
 import * as path from 'path';
-import { promises as fs } from 'fs';
+import { promises as fs, createReadStream } from 'fs';
 import * as querystring from 'querystring';
 
 import * as request from 'request-promise-native';
 import { CookieJar } from 'request';
 import { JSDOM } from 'jsdom';
+
+import { WebClient } from '@slack/web-api';
 
 interface ProgrammerMagazineLink {
   id: string;
@@ -203,6 +205,9 @@ class ProgrammerMagazineScraper {
 (async () => {
   const username = process.env.USERNAME;
   const password = process.env.PASSWORD;
+
+  const slackToken    = process.env.SLACK_TOKEN;
+  const slackChannels = process.env.SLACK_CHANNELS;
   
   if (!username || !password) {
     console.log('Please set enviromental variables');
@@ -221,7 +226,33 @@ class ProgrammerMagazineScraper {
     const newMagazines = await scraper.scrape(directory);
     console.log('complete');
     console.log('new magazines:', JSON.stringify(newMagazines, null, 2));
+
+    if (slackToken && slackChannels) {
+      await uploadNewMagazines(slackToken, slackChannels, newMagazines);
+    }
   } catch (err) {
     console.log(err);
   }
 })();
+
+async function uploadNewMagazines(slackToken: string, slackChannels: string, magazines: string[]): Promise<void> {
+  const pdfMagazines = magazines.filter((m) => m.match(/.+\.pdf$/) !== null);
+
+  if (pdfMagazines.length === 0) {
+    return;
+  }
+
+  const web = new WebClient(slackToken);
+
+  for (const file of pdfMagazines) {
+    const filebase = path.basename(file);
+    console.log(`> Uploading file... ${filebase}`);
+    await web.files.upload({
+      filename: filebase,
+      file:     createReadStream(file),
+      channels: slackChannels,
+    });
+
+    console.log(`File uploaded`);
+  }
+}
