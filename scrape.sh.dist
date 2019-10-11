@@ -3,6 +3,6 @@
 export USERNAME="username"
 export PASSWORD="password"
 
-OUTDIR="path-to-magazines-folder"
+export OUTDIR="path-to-magazines-folder"
 
 ./node_modules/.bin/ts-node prog.ts $OUTDIR
