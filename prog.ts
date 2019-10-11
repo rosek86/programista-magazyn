@@ -19,7 +19,11 @@ class ProgrammerMagazineScraper {
   private cookieJar: CookieJar = request.jar();
 
   private runningRequests = 0;
-  public requestsList: { started: boolean, scrape: () => Promise<void> }[] = [];
+  private completedRequests = 0;
+  private requestsList: { started: boolean, scrape: () => Promise<void> }[] = [];
+  private allRequestsCompleted: () => void = () => {};
+
+  private newMagazines: string[] = [];
 
   constructor(private username: string, private password: string) {
   }
@@ -71,8 +75,6 @@ class ProgrammerMagazineScraper {
   }
 
   private async getMyMagazinesDom(): Promise<JSDOM> {
-    console.log('Downloading magazines list...');
-
     const formData = querystring.stringify({
       log: this.username, pwd: this.password,
     });
@@ -105,10 +107,19 @@ class ProgrammerMagazineScraper {
     return table.getElementsByTagName('a');
   }
 
-  public async scrape(directory = '', skipExisting = true): Promise<void> {
-    for (const link of await this.getLinks()) {
-      const baseFolder = directory === '' ? __dirname : directory;
-      const magazinefolder = path.join(baseFolder, 'programista', link.id);
+  public async scrape(directory = '', skipExisting = true): Promise<string[]> {
+    this.scrapeInit();
+
+    console.log('Downloading magazines list...');
+    const links = await this.getLinks();
+
+    console.log('Downloading magazines...');
+    for (const link of links) {
+      let baseFolder = path.join(__dirname, 'programista');
+      if (directory !== '') {
+        baseFolder = directory;
+      }
+      const magazinefolder = path.join(baseFolder, link.id);
       const filename = path.join(magazinefolder, link.filename);
 
       if (skipExisting) {
@@ -124,9 +135,23 @@ class ProgrammerMagazineScraper {
         started: false,
         scrape: this.scraperFactory(link.url, magazinefolder, filename),
       });
-
-      this.startNext();
     }
+
+    const waitAllPromises = new Promise<void>((resolve) => {
+      this.allRequestsCompleted = resolve;
+    });
+    this.startNext();
+
+    await waitAllPromises;
+    return this.newMagazines;
+  }
+
+  private scrapeInit(): void {
+    this.runningRequests = 0;
+    this.completedRequests = 0;
+    this.requestsList = [];
+    this.allRequestsCompleted = () => {};
+    this.newMagazines = [];
   }
 
   private startNext(): void {
@@ -143,6 +168,10 @@ class ProgrammerMagazineScraper {
 
       ++this.runningRequests;
     }
+
+    if (this.completedRequests >= this.requestsList.length) {
+      this.allRequestsCompleted();
+    }
   }
 
   private scraperFactory(uri: string, folder: string, filename: string): () => Promise<void> {
@@ -158,11 +187,13 @@ class ProgrammerMagazineScraper {
         });
         await fs.mkdir(folder, { recursive: true });
         await fs.writeFile(filename, content);
+        this.newMagazines.push(folder);
         console.log(filebase, 'ok');
       } catch (err) {
         console.log(filebase, err.message);
       } finally {
         this.runningRequests--;
+        this.completedRequests++;
         this.startNext();
       }
     };
@@ -186,7 +217,10 @@ class ProgrammerMagazineScraper {
   try {
     const scraper = new ProgrammerMagazineScraper(username, password);
     scraper.maxRequests = 5;
-    scraper.scrape(directory);
+
+    const newMagazines = await scraper.scrape(directory);
+    console.log('complete');
+    console.log('new magazines:', JSON.stringify(newMagazines, null, 2));
   } catch (err) {
     console.log(err);
   }
