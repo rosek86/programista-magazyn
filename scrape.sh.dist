@@ -3,6 +3,10 @@
 export USERNAME="username"
 export PASSWORD="password"
 
+# optional
+export SLACK_TOKEN="https://api.slack.com/custom-integrations/legacy-tokens"
+export SLACK_CHANNELS="https://api.slack.com/methods/files.upload"
+
 export OUTDIR="path-to-magazines-folder"
 
 ./node_modules/.bin/ts-node prog.ts $OUTDIR
